@@ -8,9 +8,9 @@ function App() {
   });
 
   // App State
-  const [activeTool, setActiveTool] = useState('claude');
-  const [customFolders, setCustomFolders] = useState(() => {
-    const saved = localStorage.getItem('agent_profiles_custom_folders');
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(null);
+  const [workspaces, setWorkspaces] = useState(() => {
+    const saved = localStorage.getItem('agent_profiles_workspaces');
     return saved ? JSON.parse(saved) : [];
   });
   
@@ -19,7 +19,6 @@ function App() {
   const [error, setError] = useState(null);
   const [showNewProfile, setShowNewProfile] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
-  const [homeDir, setHomeDir] = useState('');
   
   // Renaming State
   const [editingFolderId, setEditingFolderId] = useState(null);
@@ -30,32 +29,21 @@ function App() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewProfileName, setPreviewProfileName] = useState(null);
 
-  const baseTools = [
-    { id: 'claude', name: 'Claude Code', icon: 'C', getPath: (home) => `${home}/.claude` },
-    { id: 'rovo', name: 'Rovo CLI', icon: 'R', getPath: (home) => `${home}/.config/rovo` },
-    { id: 'cline', name: 'Cline', icon: 'CL', getPath: (home) => `${home}/.cline` },
-    { id: 'cursor', name: 'Cursor', icon: 'CR', getPath: (home) => `${home}/.cursor` }
-  ];
-
+  // Fallback to first workspace if none selected
   useEffect(() => {
-    if (window.api && window.api.getHomeDir) {
-      window.api.getHomeDir().then(setHomeDir);
+    if (workspaces.length > 0 && !activeWorkspaceId) {
+      setActiveWorkspaceId(workspaces[0].id);
     }
-  }, []);
+  }, [workspaces, activeWorkspaceId]);
 
-  // Save custom folders whenever they change
+  // Save workspaces whenever they change
   useEffect(() => {
-    localStorage.setItem('agent_profiles_custom_folders', JSON.stringify(customFolders));
-  }, [customFolders]);
+    localStorage.setItem('agent_profiles_workspaces', JSON.stringify(workspaces));
+  }, [workspaces]);
 
   const getActiveDir = () => {
-    if (activeTool.startsWith('custom_')) {
-      const folder = customFolders.find(f => f.id === activeTool);
-      return folder ? folder.path : null;
-    }
-    const tool = baseTools.find(t => t.id === activeTool);
-    if (tool && homeDir) return tool.getPath(homeDir);
-    return null;
+    const folder = workspaces.find(f => f.id === activeWorkspaceId);
+    return folder ? folder.path : null;
   };
 
   const loadProfiles = async () => {
@@ -80,40 +68,44 @@ function App() {
 
   useEffect(() => {
     loadProfiles();
-  }, [activeTool, homeDir, hasOnboarded, customFolders]);
+  }, [activeWorkspaceId, hasOnboarded, workspaces]);
 
-  const handleAddCustomFolder = async () => {
+  const addWorkspace = async () => {
     if (!window.api) return false;
     const dir = await window.api.openDirectory();
     if (dir) {
       // Check if it already exists to avoid duplicates
-      const existing = customFolders.find(f => f.path === dir);
+      const existing = workspaces.find(f => f.path === dir);
       if (existing) {
-        setActiveTool(existing.id);
+        setActiveWorkspaceId(existing.id);
         return existing.id;
       }
 
       // Extract a default name from the path
-      const defaultName = dir.split('/').pop() || 'Custom Folder';
+      const defaultName = dir.split('/').pop() || 'New Workspace';
       const newFolder = {
-        id: `custom_${Date.now()}`,
+        id: `workspace_${Date.now()}`,
         name: defaultName,
         path: dir
       };
       
-      setCustomFolders(prev => [...prev, newFolder]);
-      setActiveTool(newFolder.id);
+      setWorkspaces(prev => [...prev, newFolder]);
+      setActiveWorkspaceId(newFolder.id);
       return newFolder.id;
     }
     return false;
   };
 
-  const removeCustomFolder = (e, id) => {
+  const removeWorkspace = (e, id) => {
     e.stopPropagation();
-    setCustomFolders(prev => prev.filter(f => f.id !== id));
-    if (activeTool === id) {
-      setActiveTool('claude'); // Fallback
-    }
+    const isDeletingActive = activeWorkspaceId === id;
+    setWorkspaces(prev => {
+      const filtered = prev.filter(f => f.id !== id);
+      if (isDeletingActive) {
+        setActiveWorkspaceId(filtered.length > 0 ? filtered[0].id : null);
+      }
+      return filtered;
+    });
   };
 
   const startRename = (e, folder) => {
@@ -124,7 +116,7 @@ function App() {
 
   const finishRename = (id) => {
     if (editingFolderName.trim()) {
-      setCustomFolders(prev => prev.map(f => 
+      setWorkspaces(prev => prev.map(f => 
         f.id === id ? { ...f, name: editingFolderName.trim() } : f
       ));
     }
@@ -136,11 +128,10 @@ function App() {
     if (e.key === 'Escape') setEditingFolderId(null);
   };
 
-  const completeOnboarding = async (isCustom = false) => {
-    if (isCustom) {
-      const addedId = await handleAddCustomFolder();
-      if (!addedId) return; // Cancelled
-    }
+  const completeOnboarding = async () => {
+    const addedId = await addWorkspace();
+    if (!addedId) return; // Cancelled picking a folder
+    
     localStorage.setItem('agent_profiles_onboarded', 'true');
     setHasOnboarded(true);
     setTimeout(initRepo, 500);
@@ -224,14 +215,7 @@ function App() {
   };
 
   const activeDir = getActiveDir();
-
-  // Determine active tool display name
-  let activeToolName = 'Select Tool';
-  if (activeTool.startsWith('custom_')) {
-    activeToolName = customFolders.find(f => f.id === activeTool)?.name || 'Custom Folder';
-  } else {
-    activeToolName = baseTools.find(t => t.id === activeTool)?.name || 'Select Tool';
-  }
+  const activeWorkspaceName = workspaces.find(f => f.id === activeWorkspaceId)?.name || 'Select Workspace';
 
   if (!hasOnboarded) {
     return (
@@ -239,34 +223,14 @@ function App() {
         <div className="titlebar-draggable"></div>
         <div className="onboarding-content">
           <h1>Welcome to Agent Profiles</h1>
-          <p>Supercharge your AI development by creating isolated, context-aware environments. To get started, select your primary Agent CLI.</p>
+          <p>Supercharge your AI development by creating isolated, context-aware environments. To get started, select your first folder to track (like <code>~/.claude</code> or <code>~/.cline</code>).</p>
           
-          <div className="tools-selection-grid">
-            {baseTools.map(tool => (
-              <div 
-                key={tool.id} 
-                className={`tool-selection-card ${activeTool === tool.id ? 'selected' : ''}`}
-                onClick={() => setActiveTool(tool.id)}
-              >
-                <div className="tool-selection-icon">{tool.icon}</div>
-                <div className="tool-selection-name">{tool.name}</div>
-              </div>
-            ))}
-            <div 
-              className={`tool-selection-card ${activeTool === 'custom' ? 'selected' : ''}`}
-              onClick={() => setActiveTool('custom')}
-            >
-              <div className="tool-selection-icon">+</div>
-              <div className="tool-selection-name">Custom Folder</div>
-            </div>
-          </div>
-
           <button 
             className="glass-button primary" 
-            style={{ fontSize: '16px', padding: '12px 32px' }}
-            onClick={() => completeOnboarding(activeTool === 'custom')}
+            style={{ fontSize: '18px', padding: '16px 40px', marginTop: '20px' }}
+            onClick={completeOnboarding}
           >
-            Start Journey
+            + Browse Folder to Track
           </button>
         </div>
       </div>
@@ -282,26 +246,13 @@ function App() {
             <h2>Agent Profiles</h2>
           </div>
           
-          <div className="sidebar-title">Base Tools</div>
-          {baseTools.map(tool => (
-            <div 
-              key={tool.id}
-              className={`tool-item ${activeTool === tool.id ? 'active' : ''}`}
-              onClick={() => setActiveTool(tool.id)}
-            >
-              <div className="tool-icon">{tool.icon}</div>
-              {tool.name}
-            </div>
-          ))}
-
-          <div className="sidebar-divider"></div>
-          <div className="sidebar-title">Custom Workspaces</div>
+          <div className="sidebar-title">Your Workspaces</div>
           
-          {customFolders.map(folder => (
+          {workspaces.map(folder => (
             <div 
               key={folder.id}
-              className={`custom-folder-item ${activeTool === folder.id ? 'active' : ''}`}
-              onClick={() => setActiveTool(folder.id)}
+              className={`custom-folder-item ${activeWorkspaceId === folder.id ? 'active' : ''}`}
+              onClick={() => setActiveWorkspaceId(folder.id)}
             >
               <div className="custom-folder-main">
                 <div className="tool-icon" style={{ background: 'transparent' }}>📁</div>
@@ -328,7 +279,7 @@ function App() {
                   <button className="action-icon-btn" onClick={(e) => startRename(e, folder)} title="Rename">
                     ✏️
                   </button>
-                  <button className="action-icon-btn delete" onClick={(e) => removeCustomFolder(e, folder.id)} title="Remove">
+                  <button className="action-icon-btn delete" onClick={(e) => removeWorkspace(e, folder.id)} title="Remove">
                     🗑️
                   </button>
                 </div>
@@ -336,19 +287,25 @@ function App() {
             </div>
           ))}
 
+          {workspaces.length === 0 && (
+            <div style={{ padding: '0 20px', color: 'var(--text-secondary)', fontSize: '13px' }}>
+              No workspaces added.
+            </div>
+          )}
+
           <div 
             className="tool-item" 
-            style={{ marginTop: 'auto', opacity: 0.8, fontSize: '12px' }}
-            onClick={handleAddCustomFolder}
+            style={{ marginTop: 'auto', opacity: 0.8, fontSize: '13px' }}
+            onClick={addWorkspace}
           >
-            <div className="tool-icon">+</div>
-            Add Custom Folder...
+            <div className="tool-icon" style={{ background: 'transparent' }}>+</div>
+            Add Workspace...
           </div>
         </aside>
 
         <main className="main-content">
           <div className="content-header">
-            <h1>{activeToolName}</h1>
+            <h1>{activeWorkspaceName}</h1>
             <p>Managing configs at: <code>{activeDir || 'No directory selected'}</code></p>
           </div>
 
@@ -414,7 +371,9 @@ function App() {
               </div>
             </>
           ) : (
-            <p>Please select a tool or add a custom folder to begin.</p>
+            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+              <p>Please select a workspace or add a new one to begin.</p>
+            </div>
           )}
         </main>
       </div>
