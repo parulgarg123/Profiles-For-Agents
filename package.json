@@ -39,6 +39,11 @@
   },
   "build": {
     "appId": "com.profilesforagents.app",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
     "mac": {
       "target": "dmg",
       "category": "public.app-category.developer-tools"
