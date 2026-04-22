@@ -319,3 +319,91 @@
   font-weight: 600;
   font-size: 16px;
 }
+
+/* Sidebar Custom Folder Styles */
+.sidebar-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 12px 20px;
+}
+
+.custom-folder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 8px 20px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+  group: custom-item;
+}
+
+.custom-folder-item:hover, .custom-folder-item.active {
+  background: var(--active-bg);
+  color: var(--text-primary);
+}
+
+.custom-folder-item.active {
+  font-weight: 500;
+}
+
+.custom-folder-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.custom-folder-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.custom-folder-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.custom-folder-item:hover .custom-folder-actions {
+  opacity: 1;
+}
+
+.action-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+}
+
+.action-icon-btn.delete:hover {
+  color: var(--danger-color);
+  background: var(--danger-bg);
+}
+
+.rename-input {
+  background: var(--surface-color);
+  border: 1px solid var(--accent-color);
+  color: var(--text-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-family);
+  font-size: 13px;
+  width: 100%;
+  outline: none;
+}
