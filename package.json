@@ -1,7 +1,10 @@
 {
   "name": "profilesforagents",
+  "productName": "Agent Profiles",
+  "description": "Manage and switch context profiles for LLM CLI Agents",
+  "author": "Parul Garg",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "main": "electron/main.js",
   "bin": {
