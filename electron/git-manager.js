@@ -97,6 +97,13 @@ export class GitManager {
       throw new Error(`Failed to switch profile: ${result.error}`);
     }
   }
+
+  static async deleteProfile(dir, name) {
+    const result = await this.executeGitCommand(dir, `branch -D ${name}`);
+    if (!result.success) {
+      throw new Error(`Failed to delete profile: ${result.error}`);
+    }
+  }
   static async getProfilePreview(dir, branchName) {
     const isRepo = await this.isGitRepo(dir);
     if (!isRepo) return null;

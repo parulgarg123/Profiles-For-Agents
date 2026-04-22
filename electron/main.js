@@ -105,6 +105,15 @@ ipcMain.handle('git:switchProfile', async (event, dir, name) => {
   }
 });
 
+ipcMain.handle('git:deleteProfile', async (event, dir, name) => {
+  try {
+    await GitManager.deleteProfile(dir, name);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle('git:getProfilePreview', async (event, dir, name) => {
   try {
     return await GitManager.getProfilePreview(dir, name);

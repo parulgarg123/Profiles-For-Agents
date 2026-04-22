@@ -172,6 +172,20 @@ function App() {
     }
   };
 
+  const deleteProfile = async (name) => {
+    if (!window.confirm(`Are you sure you want to permanently delete profile "${name}"?`)) return;
+    const dir = getActiveDir();
+    if (!dir) return;
+    setLoading(true);
+    const res = await window.api.deleteProfile(dir, name);
+    if (res.success) {
+      await loadProfiles();
+    } else {
+      setError(res.error || 'Failed to delete profile');
+      setLoading(false);
+    }
+  };
+
   const createProfile = async (blank = false) => {
     if (!newProfileName.trim()) return;
     const dir = getActiveDir();
@@ -368,9 +382,14 @@ function App() {
                         View Details
                       </button>
                       {!profile.isActive && (
-                        <button className="glass-button primary" onClick={() => switchProfile(profile.name)}>
-                          Switch to Profile
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button className="glass-button primary" style={{ flex: 1 }} onClick={() => switchProfile(profile.name)}>
+                            Switch to Profile
+                          </button>
+                          <button className="glass-button danger" title="Delete Profile" onClick={() => deleteProfile(profile.name)}>
+                            🗑️
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>

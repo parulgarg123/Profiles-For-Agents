@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('api', {
   initRepo: (dir) => ipcRenderer.invoke('git:initRepo', dir),
   createProfile: (dir, name, blank) => ipcRenderer.invoke('git:createProfile', dir, name, blank),
   switchProfile: (dir, name) => ipcRenderer.invoke('git:switchProfile', dir, name),
+  deleteProfile: (dir, name) => ipcRenderer.invoke('git:deleteProfile', dir, name),
   openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
   getHomeDir: () => ipcRenderer.invoke('system:getHomeDir'),
 });
