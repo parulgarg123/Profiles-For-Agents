@@ -1,0 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --bg-color: #f9fafb;
+  --surface-color: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --accent-color: #000000;
+  --accent-hover: #374151;
+  --danger-color: #dc2626;
+  --danger-bg: #fef2f2;
+  --active-bg: #f3f4f6;
+  
+  --font-family: 'Inter', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Draggable title bar for Electron on Mac */
+.titlebar-draggable {
+  -webkit-app-region: drag;
+  height: 38px;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+}
+
+.titlebar-non-draggable {
+  -webkit-app-region: no-drag;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+button {
+  font-family: var(--font-family);
+  cursor: pointer;
+  outline: none;
+  border: none;
+}
+
+/* Clean UI Utilities */
+.glass-panel {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.glass-button {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.glass-button:hover {
+  background: var(--active-bg);
+  border-color: #d1d5db;
+}
+
+.glass-button.primary {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #ffffff;
+}
+
+.glass-button.primary:hover {
+  background: var(--accent-hover);
+}
+
+.glass-button.danger {
+  background: var(--surface-color);
+  border-color: #fca5a5;
+  color: var(--danger-color);
+}
+
+.glass-button.danger:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger-color);
+}
+
+.glass-input {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  width: 100%;
+  font-family: var(--font-family);
+  font-size: 13px;
+  transition: border-color 0.15s;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: var(--text-primary);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
